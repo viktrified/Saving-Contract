@@ -8,8 +8,8 @@ contract MyToken {
     uint256 public totalSupply;
     address private owner;
 
-    mapping(address => uint256) private token;
-    mapping(address => mapping(address => uint256)) private allowances;
+    mapping(address => uint256) internal token;
+    mapping(address => mapping(address => uint256)) internal allowances;
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
@@ -23,17 +23,7 @@ contract MyToken {
         token[owner] = totalSupply;
     }
 
-    modifier onlyOwner {
-        require(msg.sender == owner, "Caller is not the contract owner");
-        _;
-    }
-
-    modifier onlyCaller {
-        require(msg.sender == msg.sender, "Caller is not caller");
-        _;
-    }
-
-    function balanceOf(address account) public view onlyCaller returns (uint256) {
+    function balanceOf(address account) public view returns (uint256) {
         return token[account];
     }
 
@@ -46,19 +36,21 @@ contract MyToken {
     }
 
     function approve(address spender, uint256 amount) public returns (bool) {
-        allowances[owner][spender] = amount;
-        emit Approval(owner, spender, amount);
+        allowances[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
         return true;
     }
 
     function allowance(address _owner, address spender) public view returns (uint256) {
-        _owner = owner;
-        return allowances[owner][spender];
+        return allowances[_owner][spender];
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+        require(token[sender] >= amount, "ERC20: transfer amount exceeds balance");
         require(allowances[sender][msg.sender] >= amount, "ERC20: transfer amount exceeds allowance");
 
+        token[sender] -= amount;
+        token[recipient] += amount;
         allowances[sender][msg.sender] -= amount;
 
         emit Transfer(sender, recipient, amount);
