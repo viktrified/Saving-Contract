@@ -9,10 +9,14 @@ contract Saving is MyToken {
     event Save(address indexed user, uint amount);
     event Withdraw(address indexed user, uint amount);
 
-    constructor(uint _initialSupply) MyToken(name, symbol, decimals,_initialSupply) {}
+    error AmountZero(); 
+    error InsufficientBalance(uint available, uint required); 
+
+    constructor(uint _initialSupply) MyToken(name, symbol, decimals, _initialSupply) {}
 
     function saveToken(uint _amount) external {
-        require(_amount > 0, "Amount must be greater than zero");
+        if (_amount == 0) revert AmountZero();
+
         token[msg.sender] -= _amount;
         userBalance[msg.sender] += _amount;
 
@@ -20,8 +24,9 @@ contract Saving is MyToken {
     }
 
     function withdraw(uint _amount) external {
-        require(_amount > 0, "Withdraw amount must be greater than zero");
-        require(userBalance[msg.sender] >= _amount, "Insufficient savings balance");
+        if (_amount == 0) revert AmountZero();
+        if (userBalance[msg.sender] < _amount) revert InsufficientBalance(userBalance[msg.sender], _amount);
+
         userBalance[msg.sender] -= _amount;
         token[msg.sender] += _amount;
 
@@ -30,5 +35,9 @@ contract Saving is MyToken {
 
     function checkSavings(address _user) external view returns (uint) {
         return userBalance[_user];
+    }
+
+    function getTotalReserve() internal view returns (uint) {
+        return userBalance[address(this)];
     }
 }

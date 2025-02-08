@@ -62,7 +62,7 @@ contract StudentManagement {
         students[studentId] = student;
 
     
-        // emit CreatedStudent(_name, _class, _age);
+        emit CreatedStudent(_name, _class, _age);
     }
 
 
